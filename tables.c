@@ -54,7 +54,7 @@ varctx_t * update_var(char *name, value_t val, varctx_t *o)
   return n;
 }
 
-memctx_t *store(value_t addr, value_t val, memctx_t *o)
+memctx_t *store(unsigned int addr, value_t val, memctx_t *o)
 {
   memctx_t *n = NULL;
   memctx_t *c = o;

@@ -161,16 +161,22 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 		printf("%s\n", s->info.node.arguments->elem->info.string);
 		break;
 	    default:
-		printf("%u\n", eval_exp(s->info.node.arguments->elem, 
+	    if(eval_exp(s->info.node.arguments->elem, 
 					state->tbl,
-					state->mem));
+					state->mem).taint == 1){
+	    	printf("<secret>\n");
+	    }else{
+			printf("%u\n", eval_exp(s->info.node.arguments->elem, 
+						state->tbl,
+						state->mem).value);
+		}
 		break;
 	    }
 
 	  break;
 	case IF:
 
-	    if(eval_exp(s->info.node.arguments->elem, state->tbl, state->mem)){
+	    if(eval_exp(s->info.node.arguments->elem, state->tbl, state->mem).value){
 		state = eval_stmts(s->info.node.arguments->next->elem, state);
 	    } else {
 		state = eval_stmts(s->info.node.arguments->next->next->elem, state);
@@ -180,7 +186,7 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 	    state = eval_stmts(s->info.node.arguments->next->elem, state);
 	  break;
 	case ASSERT:
-	    if(eval_exp(s->info.node.arguments->elem, state->tbl,state->mem) ==0){
+	    if(eval_exp(s->info.node.arguments->elem, state->tbl,state->mem).value ==0){
 		printf("Assert failed!\n");
 	    }
 	  break;
