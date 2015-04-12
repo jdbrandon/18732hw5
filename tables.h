@@ -3,10 +3,13 @@
 
 #include <stdio.h>
 
-typedef int value_t;
+typedef struct value_t {
+  int value;
+  int taint;
+} value_t;
 
-#define DEFAULT_VAL 0
-
+#define DEFAULT_VAL ((value_t){ .value = 0, .taint = 0})
+ 
 typedef struct varctx_t {
   char *name;
   value_t val;
