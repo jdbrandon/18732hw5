@@ -39,7 +39,8 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
     		sprintf(tmp, "mem[%d]", index.value);
     		tmp2 = (char*)malloc(strlen(tmp)+1);
     		strcpy(tmp2,tmp);
-    		tainttree = newvar(tmp2, tainttree);
+    		tainttree->next = newvar(tmp2, NULL);
+    		tainttree = tainttree->next;
     	}
     	return valt;
 	  break;
