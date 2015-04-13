@@ -120,7 +120,8 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 		three = eval_exp(e->info.node.arguments->next->next->elem,tbl,mem);
 		int v = one.value?two.value:three.value;
-		int t = one.taint || two.taint || three.taint;
+		int t = (one.value && two.taint) || (!one.value && three.taint);
+		//int t = one.taint || two.taint || three.taint;
           return  ((value_t){.value=v, .taint=t}); 
 	case READINT:
 	  printf("> ");
@@ -190,12 +191,16 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 					state->mem).taint == 1){
 	    	printf("<secret>\n");
 	    	fprintf(stderr, "Tainted variable: ");
-	    	tainttree = headtree->next;
-	    	while(tainttree->next != NULL){
-	    		fprintf(stderr, "%s, ",tainttree->name);
-	    		tainttree = tainttree->next;
+	    	if(headtree->next == NULL){
+	    		fprintf(stderr, "Direct\n");
+	    	}else{
+		    	tainttree = headtree->next;
+		    	while(tainttree->next != NULL){
+		    		fprintf(stderr, "%s, ",tainttree->name);
+		    		tainttree = tainttree->next;
+		    	}
+		    	fprintf(stderr, "%s\n",tainttree->name);
 	    	}
-	    	fprintf(stderr, "%s\n",tainttree->name);
 	    }else{
 			printf("%u\n", eval_exp(s->info.node.arguments->elem, 
 						state->tbl,
