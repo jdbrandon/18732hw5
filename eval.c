@@ -1,9 +1,13 @@
 #include "ast.h"
 #include "tables.h"
 #include "eval.h"
+#include <stdio.h>
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
 int eval_debug = 0;
+varctx_t* tainttree;
 
 void debug_eval(int val)
 {
@@ -12,14 +16,32 @@ void debug_eval(int val)
 
 value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 {
-  value_t ret,one,two,three;
+  char tmp[10];
+  char* tmp2;
+  value_t ret,one,two,three,valt,index;
     switch(e->tag){
     case int_ast: return ((value_t){.value = e->info.integer, .taint = 0}); break;
-    case var_ast: return lookup_var(e->info.varname, tbl); break;
+    case var_ast: 
+    	valt = lookup_var(e->info.varname, tbl);
+    	if(tainttree != NULL && valt.taint == 1){
+    		tainttree->next = newvar(e->info.varname, NULL);
+    		tainttree = tainttree->next;
+    		//tainttree = newvar(e->info.varname, tainttree);
+    	}
+    	return valt;
+    	break;
     case node_ast: {
 	switch(e->info.node.tag){
 	case MEM:
-	  return load(eval_exp(e->info.node.arguments->elem, tbl,mem).value, mem);
+		index = eval_exp(e->info.node.arguments->elem, tbl,mem);
+		valt = load(index.value, mem);
+    	if(tainttree != NULL && valt.taint == 1){
+    		sprintf(tmp, "mem[%d]", index.value);
+    		tmp2 = (char*)malloc(strlen(tmp)+1);
+    		strcpy(tmp2,tmp);
+    		tainttree = newvar(tmp2, tainttree);
+    	}
+    	return valt;
 	  break;
 	case PLUS:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
@@ -161,15 +183,26 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 		printf("%s\n", s->info.node.arguments->elem->info.string);
 		break;
 	    default:
+	    tainttree = newvar("", NULL);
+	    varctx_t* headtree = tainttree;
 	    if(eval_exp(s->info.node.arguments->elem, 
 					state->tbl,
 					state->mem).taint == 1){
 	    	printf("<secret>\n");
+	    	fprintf(stderr, "Tainted variable: ");
+	    	tainttree = headtree->next;
+	    	while(tainttree->next != NULL){
+	    		fprintf(stderr, "%s, ",tainttree->name);
+	    		tainttree = tainttree->next;
+	    	}
+	    	fprintf(stderr, "%s\n",tainttree->name);
 	    }else{
 			printf("%u\n", eval_exp(s->info.node.arguments->elem, 
 						state->tbl,
 						state->mem).value);
+			fprintf(stderr, "Tainted variable: None\n");
 		}
+		tainttree = NULL;
 		break;
 	    }
 
