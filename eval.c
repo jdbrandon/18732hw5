@@ -183,6 +183,7 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 	    switch(s->info.node.arguments->elem->tag){
 	    case str_ast:
 		printf("%s\n", s->info.node.arguments->elem->info.string);
+		fprintf(stderr, "Tainted variable: None\n");
 		break;
 	    default:
 	    tainttree = newvar("", NULL);
