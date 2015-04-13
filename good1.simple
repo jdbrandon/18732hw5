@@ -1,10 +1,7 @@
-w = get_int();
-mem[7] = get_secret_int();
-z = w + mem[7];
-if(0) {
-	mem[z] = 17;
-}
-else{
-	mem[z] = 6;
-}
-print(mem[11]);
+a = get_int();
+mem[a] = get_secret_int();
+mem[mem[a]] = a;
+b = mem[a] + 2;
+c = a + 1;
+d = mem[c-1];
+print(d+b+c+a);
