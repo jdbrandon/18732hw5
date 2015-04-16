@@ -1,0 +1,13 @@
+a = get_secret_int();
+b = get_int();
+if (a==b) {
+	print(b);
+}
+else {
+  if(a > b){
+    print("secret is higher");
+  }
+  else{
+   print("secret is lower");
+  }
+}
