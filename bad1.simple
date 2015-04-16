@@ -1,2 +1,7 @@
-w = get_secret_int();
-print(w);
+a = get_int();
+mem[a] = get_secret_int();
+mem[mem[a]] = a;
+b = mem[a] + 2;
+c = a + 1;
+d = mem[c-1];
+print(d+b+c+a);

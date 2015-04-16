@@ -1,0 +1,6 @@
+w = get_secret_int();
+x = get_int();
+y = get_int();
+z = get_int();
+a = x?w:y;
+print(a+z);

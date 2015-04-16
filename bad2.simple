@@ -1,3 +1,7 @@
 w = get_secret_int();
 x = get_int();
-print(3*x + 7 - w);
+mem[x] = w;
+w = w+x;
+y = x + get_int();
+mem[x] = w+y;
+print(mem[x]);

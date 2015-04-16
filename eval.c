@@ -112,10 +112,10 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	  break;
 	case NEGATIVE:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
-	  return ((value_t){.value=-one.value, .taint = one.taint || two.taint});
+	  return ((value_t){.value=-one.value, .taint = one.taint});
 	case NOT:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
-	  return ((value_t){.value=!one.value, .taint = one.taint || two.taint});;
+	  return ((value_t){.value=!one.value, .taint = one.taint});
         case IFE:
         one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
