@@ -1,8 +1,9 @@
-assert (b==b);
-a = get_secret_int();
-if(a==1) {
-  print (1);
+x = get_int();
+y = get_secret_int();
+z = x-y;
+if(z<0){
+   print(0);
 }
 else {
-  print (2);
+   print(1);
 }
