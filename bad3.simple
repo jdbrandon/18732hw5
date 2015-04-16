@@ -1,6 +1,8 @@
-w = get_secret_int();
 x = get_int();
-y = get_int();
-z = get_int();
-a = x?w:y;
-print(a+z);
+y = get_int() +1;
+z = x * y -4;
+y = z>0?y:x+10;
+w = x+y-w*z;
+mem[w]=w-2;
+x = mem[w];
+print(x+get_secret_int());
