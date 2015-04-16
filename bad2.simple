@@ -4,4 +4,4 @@ mem[x] = w;
 w = w+x;
 y = x + get_int();
 mem[x] = w+y;
-print(mem[x]);
+print(mem[x]+w+y+x);
