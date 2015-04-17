@@ -26,7 +26,6 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
     	if(tainttree != NULL && valt.taint == 1){
     		tainttree->next = newvar(e->info.varname, NULL);
     		tainttree = tainttree->next;
-    		//tainttree = newvar(e->info.varname, tainttree);
     	}
     	return valt;
     	break;
@@ -35,14 +34,18 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	case MEM:
 		index = eval_exp(e->info.node.arguments->elem, tbl,mem);
 		valt = load(index.value, mem);
-    	if(tainttree != NULL && valt.taint == 1){
+    	if(tainttree != NULL && (valt.taint == 1 || index.taint == 1)){
     		sprintf(tmp, "mem[%d]", index.value);
     		tmp2 = (char*)malloc(strlen(tmp)+1);
     		strcpy(tmp2,tmp);
     		tainttree->next = newvar(tmp2, NULL);
     		tainttree = tainttree->next;
     	}
-    	return valt;
+    	value_t* newvaltp = (value_t*)malloc(sizeof(value_t));
+    	value_t newvalt = *newvaltp;
+    	newvalt.value = valt.value;
+    	newvalt.taint = valt.taint || index.taint;
+    	return newvalt;
 	  break;
 	case PLUS:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
@@ -113,9 +116,11 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	case NEGATIVE:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 	  return ((value_t){.value=-one.value, .taint = one.taint});
+	  break;
 	case NOT:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 	  return ((value_t){.value=!one.value, .taint = one.taint});
+	  break;
         case IFE:
         one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
@@ -124,6 +129,7 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 		int t = (one.value && two.taint) || (!one.value && three.taint);
 		//int t = one.taint || two.taint || three.taint;
           return  ((value_t){.value=v, .taint=t}); 
+          break;
 	case READINT:
 	  printf("> ");
 	  scanf("%d", &ret.value);
@@ -134,6 +140,12 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	  printf("# ");
 	  scanf("%d", &ret.value);
 	  ret.taint = 1;
+	  if(tainttree != NULL){
+	  	tmp2 = (char*)malloc(7);
+	  	strcpy(tmp2, "Direct");
+    	tainttree->next = newvar(tmp2, NULL);
+    	tainttree = tainttree->next;
+      }
 	  return ret;
 	  break;
 	default:
@@ -193,24 +205,20 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 					state->mem).taint == 1){
 	    	printf("<secret>\n");
 	    	fprintf(stderr, "Tainted variable: ");
-	    	if(headtree->next == NULL){
-	    		fprintf(stderr, "Direct\n");
-	    	}else{
-		    	tainttree = headtree->next;
-		    	while(tainttree->next != NULL){
-		    		fprintf(stderr, "%s, ",tainttree->name);
-		    		tainttree = tainttree->next;
-		    	}
-		    	fprintf(stderr, "%s\n",tainttree->name);
-	    	}
+	    	tainttree = headtree->next;
+		    while(tainttree->next != NULL){
+		    	fprintf(stderr, "%s, ",tainttree->name);
+		    	tainttree = tainttree->next;
+		    }
+		    fprintf(stderr, "%s\n",tainttree->name);
+	    	
 	    }else{
-			printf("%u\n", eval_exp(s->info.node.arguments->elem, 
+			printf("%d\n", eval_exp(s->info.node.arguments->elem, 
 						state->tbl,
 						state->mem).value);
 			fprintf(stderr, "Tainted variable: None\n");
 		}
 		tainttree = NULL;
-		break;
 	    }
 
 	  break;

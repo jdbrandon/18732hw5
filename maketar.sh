@@ -8,5 +8,6 @@ cp *.in ./handin
 cp *.out ./handin
 cp *.err ./handin
 cp control*.simple ./handin
-tar czvf handin.tar ./handin
+cd handin
+tar czvf handin.tar *
 tar tvf handin.tar
