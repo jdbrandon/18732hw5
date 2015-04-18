@@ -51,7 +51,7 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	  	((value_t){.value=one.value+two.value, .taint = one.taint || two.taint});
+	  	((value_t){.value=one.value+two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->info.node.tag == NEGATIVE && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.node.arguments->elem->info.varname)==0)});
 	  break;
 	case MINUS:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
