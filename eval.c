@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int eval_debug = 0;
+int eval_debug = 1;
 varctx_t* tainttree;
 
 void debug_eval(int val)
@@ -18,7 +18,8 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 {
   char tmp[10];
   char* tmp2;
-  value_t ret,one,two,three,valt,index;
+  value_t* ret;
+  value_t one,two,three,valt,index;
     switch(e->tag){
     case int_ast: return ((value_t){.value = e->info.integer, .taint = 0}); break;
     case var_ast: 
@@ -118,31 +119,32 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	case NOT:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 	  return ((value_t){.value=!one.value, .taint = one.taint});
-        case IFE:
+    case IFE:
         one = eval_exp(e->info.node.arguments->elem,tbl,mem);
-		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
-		three = eval_exp(e->info.node.arguments->next->next->elem,tbl,mem);
-		int v = one.value?two.value:three.value;
-		int t = one.taint || (one.value && two.taint) || (!one.value && three.taint);
+        two = one.value?eval_exp(e->info.node.arguments->next->elem,tbl,mem):eval_exp(e->info.node.arguments->next->next->elem,tbl,mem);
+		int v = two.value;
+		int t = one.taint || two.taint;
 		//int t = one.taint || two.taint || three.taint;
-          return  ((value_t){.value=v, .taint=t}); 
+        return  ((value_t){.value=v, .taint=t}); 
 	case READINT:
+	  ret = (value_t*)malloc(sizeof(value_t));
 	  printf("> ");
-	  scanf("%d", &ret.value);
-	  ret.taint = 0;
-	  return ret;
+	  scanf("%d", &(ret->value));
+	  ret->taint = 0;
+	  return *ret;
 	  break;
 	case READSECRETINT:
+	  ret = (value_t*)malloc(sizeof(value_t));
 	  printf("# ");
-	  scanf("%d", &ret.value);
-	  ret.taint = 1;
+	  scanf("%d", &(ret->value));
+	  ret->taint = 1;
 	  if(tainttree != NULL){
 	  	tmp2 = (char*)malloc(7);
 	  	strcpy(tmp2, "Direct");
     	tainttree->next = newvar(tmp2, NULL);
     	tainttree = tainttree->next;
       }
-	  return ret;
+	  return *ret;
 	  break;
 	default:
 	  assert(0); // Unknown/unhandled op.
@@ -194,7 +196,7 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 		    fprintf(stderr, "Tainted variable: None\n");
 		    break;
 	      default:
-	        tainttree = newvar("", NULL);
+	        tainttree = newvar("first", NULL);
 	        varctx_t* headtree = tainttree;
 	        if(eval_exp(s->info.node.arguments->elem, 
 		        	    state->tbl,
