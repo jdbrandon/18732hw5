@@ -34,7 +34,7 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	case MEM:
 		index = eval_exp(e->info.node.arguments->elem, tbl,mem);
 		valt = load(index.value, mem);
-    	if(tainttree != NULL && (valt.taint == 1 || index.taint == 1)){
+    	if(tainttree != NULL && (valt.taint == 1)){
     		sprintf(tmp, "mem[%d]", index.value);
     		tmp2 = (char*)malloc(strlen(tmp)+1);
     		strcpy(tmp2,tmp);
@@ -42,10 +42,9 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
     		tainttree = tainttree->next;
     	}
     	value_t* newvaltp = (value_t*)malloc(sizeof(value_t));
-    	value_t newvalt = *newvaltp;
-    	newvalt.value = valt.value;
-    	newvalt.taint = valt.taint || index.taint;
-    	return newvalt;
+    	newvaltp->value = valt.value;
+    	newvaltp->taint = valt.taint || index.taint;
+    	return *newvaltp;
 	  break;
 	case PLUS:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
@@ -57,13 +56,13 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	    ((value_t){.value=one.value-two.value, .taint = one.taint || two.taint});
+	    ((value_t){.value=one.value-two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	  break;
 	case DIVIDE:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	    ((value_t){.value=one.value/two.value, .taint = one.taint || two.taint});
+	    ((value_t){.value=one.value/two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	  break;
 	case TIMES:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
@@ -75,33 +74,33 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	    ((value_t){.value=one.value==two.value, .taint = one.taint || two.taint});
+	    ((value_t){.value=one.value==two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	  break;
 	case NEQ:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	    ((value_t){.value=one.value!=two.value, .taint = one.taint || two.taint});
+	    ((value_t){.value=one.value!=two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	  break;
 	case GT:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
-	  return ((value_t){.value=one.value>two.value, .taint = one.taint || two.taint});
+	  return ((value_t){.value=one.value>two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	    break;
 	case LT:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
-	  return ((value_t){.value=one.value<two.value, .taint = one.taint || two.taint});
+	  return ((value_t){.value=one.value<two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	    break;
 	case LEQ:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
-	  return ((value_t){.value=one.value<=two.value, .taint = one.taint || two.taint});
+	  return ((value_t){.value=one.value<=two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	    break;
 	case GEQ:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
-	  return ((value_t){.value=one.value>=two.value, .taint = one.taint || two.taint});
+	  return ((value_t){.value=one.value>=two.value, .taint =(one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	    break;
 	case AND:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
@@ -116,20 +115,17 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 	case NEGATIVE:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 	  return ((value_t){.value=-one.value, .taint = one.taint});
-	  break;
 	case NOT:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 	  return ((value_t){.value=!one.value, .taint = one.taint});
-	  break;
         case IFE:
         one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 		three = eval_exp(e->info.node.arguments->next->next->elem,tbl,mem);
 		int v = one.value?two.value:three.value;
-		int t = (one.value && two.taint) || (!one.value && three.taint);
+		int t = one.taint || (one.value && two.taint) || (!one.value && three.taint);
 		//int t = one.taint || two.taint || three.taint;
           return  ((value_t){.value=v, .taint=t}); 
-          break;
 	case READINT:
 	  printf("> ");
 	  scanf("%d", &ret.value);
@@ -179,46 +175,46 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 	    v = eval_exp(t2, state->tbl, state->mem);
 	    switch(t1->tag){
 	    case var_ast:
-		state->tbl = update_var(t1->info.string, v, state->tbl);
-		break;
+		    state->tbl = update_var(t1->info.string, v, state->tbl);
+		    break;
 	    case node_ast:
-		assert(t1->info.node.tag == MEM);
-		state->mem = store(eval_exp(t1->info.node.arguments->elem,
+		    assert(t1->info.node.tag == MEM);
+		    state->mem = store(eval_exp(t1->info.node.arguments->elem,
 					  state->tbl, 
 					  state->mem).value, v, state->mem);
 		break;
-	    default:
+	  default:
 		assert(0);
 	    }
 	  break;
 	case PRINT:
 	    switch(s->info.node.arguments->elem->tag){
-	    case str_ast:
-		printf("%s\n", s->info.node.arguments->elem->info.string);
-		fprintf(stderr, "Tainted variable: None\n");
-		break;
-	    default:
-	    tainttree = newvar("", NULL);
-	    varctx_t* headtree = tainttree;
-	    if(eval_exp(s->info.node.arguments->elem, 
-					state->tbl,
-					state->mem).taint == 1){
-	    	printf("<secret>\n");
-	    	fprintf(stderr, "Tainted variable: ");
-	    	tainttree = headtree->next;
-		    while(tainttree->next != NULL){
-		    	fprintf(stderr, "%s, ",tainttree->name);
-		    	tainttree = tainttree->next;
+	      case str_ast:
+		    printf("%s\n", s->info.node.arguments->elem->info.string);
+		    fprintf(stderr, "Tainted variable: None\n");
+		    break;
+	      default:
+	        tainttree = newvar("", NULL);
+	        varctx_t* headtree = tainttree;
+	        if(eval_exp(s->info.node.arguments->elem, 
+		        	    state->tbl,
+		                state->mem).taint == 1){
+	            printf("<secret>\n");
+	            fprintf(stderr, "Tainted variable: ");
+	            tainttree = headtree->next;
+		        while(tainttree->next != NULL){
+		        	fprintf(stderr, "%s, ",tainttree->name);
+		        	tainttree = tainttree->next;
+		        }
+		        fprintf(stderr, "%s\n",tainttree->name);
+	        }else{
+		    	printf("%d\n", eval_exp(s->info.node.arguments->elem, 
+		    				state->tbl,
+		    				state->mem).value);
+		    	fprintf(stderr, "Tainted variable: None\n");
 		    }
-		    fprintf(stderr, "%s\n",tainttree->name);
-	    	
-	    }else{
-			printf("%d\n", eval_exp(s->info.node.arguments->elem, 
-						state->tbl,
-						state->mem).value);
-			fprintf(stderr, "Tainted variable: None\n");
-		}
-		tainttree = NULL;
+		    tainttree = NULL;
+		    break;
 	    }
 
 	  break;
@@ -228,14 +224,14 @@ state_t* eval_stmts(ast_t *p, state_t *state)
 		state = eval_stmts(s->info.node.arguments->next->elem, state);
 	    } else {
 		state = eval_stmts(s->info.node.arguments->next->next->elem, state);
-            } 
+        } 
 	  break;
 	case SEQ:
 	    state = eval_stmts(s->info.node.arguments->next->elem, state);
 	  break;
 	case ASSERT:
 	    if(eval_exp(s->info.node.arguments->elem, state->tbl,state->mem).value ==0){
-		printf("Assert failed!\n");
+		    printf("Assert failed!\n");
 	    }
 	  break;
 	default:

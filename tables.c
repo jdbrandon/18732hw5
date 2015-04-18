@@ -38,14 +38,18 @@ varctx_t * update_var(char *name, value_t val, varctx_t *o)
       if(eval_debug){
 	printf("[Debug] update %s with %x (old value %x)\n", name, val.value, c->val.value);
       }
-      c->val = val;
+      c->val.value = val.value;
+      c->val.taint = val.taint;
+      //c->val = val;
       return o;
     }
     c= c->next;
   }
   n = (varctx_t *)malloc(sizeof(varctx_t));
   n->name = name;
-  n->val = val;
+  n->val.value = val.value;
+  n->val.taint = val.taint;
+  //n->val = val;
   n->next = o;
   if(eval_debug){
     printf("[Debug] update %s with %x (new node)\n", name, val.value);
@@ -64,8 +68,9 @@ memctx_t *store(unsigned int addr, value_t val, memctx_t *o)
 	printf("[Debug] store %x with %x (replacing %x)\n", c->addr,
 	       val.value, c->val.value);
       }
-
-      c->val = val;
+      c->val.value = val.value;
+      c->val.taint = val.taint;
+      //c->val = val;
       return o;
     }
     c = c->next;
@@ -73,7 +78,9 @@ memctx_t *store(unsigned int addr, value_t val, memctx_t *o)
   /* we didn't find the address. create a new spot in the context */
   n = (memctx_t *)(malloc(sizeof(memctx_t)));
   n->addr = addr;
-  n->val = val;
+  n->val.value = val.value;
+  n->val.taint = val.taint;
+  //n->val = val;
   n->next = o;
   if(eval_debug){
     printf("[Debug] store %x with %x (new node)\n", n->addr, val.value);
