@@ -1,1 +1,1 @@
-Tainted variable: mem[3], w
+Tainted variable: mem[3], mem[4], w, z

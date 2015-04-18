@@ -1,6 +1,6 @@
+t=get_int();
+print("yes");
+print(t);
 x = get_secret_int();
-y = get_int() +1;
-z = x * y;
-w = z>5?y:x;
-print(w);
-print(get_secret_int());
+print("not");
+print(t+-x);
