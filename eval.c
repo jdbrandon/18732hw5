@@ -63,13 +63,13 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	    ((value_t){.value=one.value/two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
+	    ((value_t){.value=one.value/two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == int_ast && e->info.node.arguments->elem->info.integer == 0) && !(e->info.node.arguments->elem->tag == var_ast && e->info.node.arguments->next->elem->tag == var_ast && strcmp(e->info.node.arguments->elem->info.varname, e->info.node.arguments->next->elem->info.varname)==0)});
 	  break;
 	case TIMES:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
 		two = eval_exp(e->info.node.arguments->next->elem,tbl,mem);
 	  return 
-	    ((value_t){.value=one.value*two.value, .taint = one.taint || two.taint});
+	    ((value_t){.value=one.value*two.value, .taint = (one.taint || two.taint) && !(e->info.node.arguments->elem->tag == int_ast && e->info.node.arguments->elem->info.integer == 0) && !(e->info.node.arguments->next->elem->tag == int_ast && e->info.node.arguments->next->elem->info.integer == 0)});
 	  break;
 	case EQ:
 		one = eval_exp(e->info.node.arguments->elem,tbl,mem);
@@ -122,9 +122,13 @@ value_t eval_exp(ast_t *e, varctx_t *tbl, memctx_t *mem)
     case IFE:
         one = eval_exp(e->info.node.arguments->elem,tbl,mem);
         two = one.value?eval_exp(e->info.node.arguments->next->elem,tbl,mem):eval_exp(e->info.node.arguments->next->next->elem,tbl,mem);
+		int valuesame = 0;
+		if((e->info.node.arguments->next->elem->tag != node_ast ||  (e->info.node.arguments->next->elem->info.node.tag != READINT && e->info.node.arguments->next->elem->info.node.tag != READSECRETINT)) && (e->info.node.arguments->next->next->elem->tag != node_ast || (e->info.node.arguments->next->next->elem->info.node.tag != READINT && e->info.node.arguments->next->next->elem->info.node.tag != READSECRETINT))){
+			valuesame = eval_exp(e->info.node.arguments->next->elem,tbl,mem).value == eval_exp(e->info.node.arguments->next->next->elem,tbl,mem).value;
+		}
+
 		int v = two.value;
-		int t = one.taint || two.taint;
-		//int t = one.taint || two.taint || three.taint;
+		int t = two.taint || (one.taint && !valuesame );
         return  ((value_t){.value=v, .taint=t}); 
 	case READINT:
 	  ret = (value_t*)malloc(sizeof(value_t));
